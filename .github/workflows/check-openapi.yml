@@ -5,8 +5,8 @@ on:
     - cron: '0 9 * * 1'
   workflow_dispatch:
   push:
-     paths:
-       - .github/workflows/check-openapi.yml
+    paths:
+      - .github/workflows/check-openapi.yml
 permissions:
   contents: write
 
