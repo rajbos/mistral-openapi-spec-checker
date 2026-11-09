@@ -59,25 +59,33 @@ def operations(spec):
 def referenced_components(spec, value):
     found = {}
 
-    def visit(node):
+    def resolve(ref, scope):
+        for root in (scope, spec) if scope is not spec else (spec,):
+            target = root
+            try:
+                for part in ref[2:].split("/"):
+                    target = target[part.replace("~1", "/").replace("~0", "~")]
+                return target, root
+            except (KeyError, TypeError):
+                pass
+        raise ValueError(f"Unresolved reference: {ref}") from None
+
+    def visit(node, scope):
         if isinstance(node, dict):
+            if "$defs" in node:
+                scope = node
             ref = node.get("$ref")
             if isinstance(ref, str) and ref.startswith("#/") and ref not in found:
-                target = spec
-                try:
-                    for part in ref[2:].split("/"):
-                        target = target[part.replace("~1", "/").replace("~0", "~")]
-                except (KeyError, TypeError):
-                    raise ValueError(f"Unresolved reference: {ref}") from None
+                target, target_scope = resolve(ref, scope)
                 found[ref] = target
-                visit(target)
+                visit(target, target_scope)
             for child in node.values():
-                visit(child)
+                visit(child, scope)
         elif isinstance(node, list):
             for child in node:
-                visit(child)
+                visit(child, scope)
 
-    visit(value)
+    visit(value, spec)
     return found
 
 

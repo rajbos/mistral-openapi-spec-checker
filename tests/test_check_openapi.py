@@ -72,6 +72,26 @@ class CheckerTests(unittest.TestCase):
         operation["externalDocs"] = {"url": "https://docs.mistral.ai/specific"}
         self.assertIn("https://docs.mistral.ai/specific", render(spec(), current))
 
+    def test_schema_references_use_local_defs_scope(self):
+        old = spec()
+        schema = {
+            "$defs": {"SpeechStreamEventTypes": {"type": "string"}},
+            "properties": {"event": {"$ref": "#/$defs/SpeechStreamEventTypes"}},
+        }
+        old["paths"]["/v1/chat/completions"]["post"]["responses"]["200"] = {
+            "content": {"text/event-stream": {"schema": schema}}
+        }
+        current = copy.deepcopy(old)
+        current["paths"]["/v1/chat/completions"]["post"]["responses"]["200"][
+            "content"
+        ]["text/event-stream"]["schema"]["$defs"]["SpeechStreamEventTypes"][
+            "type"
+        ] = "integer"
+        notes = render(old, current)
+        self.assertIn(
+            "references.#/$defs/SpeechStreamEventTypes.type", notes
+        )
+
     def test_security_schemes_follow_effective_requirements(self):
         old = spec()
         old["security"] = [{"apiKey": []}]
