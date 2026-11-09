@@ -5,6 +5,20 @@ every Monday at 09:00 UTC and publishes endpoint changes as GitHub releases.
 Subscribe to the release feed at
 `https://github.com/rajbos/mistral-openapi-spec-checker/releases.atom`.
 
+## When releases are created
+
+A release is **not** created on every run. The workflow runs weekly, on manual
+dispatch, and when the workflow file itself is pushed. Each run then:
+
+1. With no earlier `mistral-openapi-*` release, publishes a **baseline** release
+   (this happens once, on the first run).
+2. Otherwise publishes a release only if the spec differs from the previous
+   release's snapshot. No changes means no release, so quiet weeks add nothing
+   to the feed.
+
+Every run writes a summary (baseline used, spec size, and the outcome with
+added/changed/removed counts) to the workflow run page.
+
 The first successful run publishes a baseline release. Later runs publish only
 when operations are added, removed, or changed, including changes to their
 referenced local schemas, path settings, servers, and effective security schemes.

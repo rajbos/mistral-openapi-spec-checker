@@ -36,6 +36,7 @@ jobs:
             > "$RUNNER_TEMP/baseline-tags"
           baseline=$(head -n 1 "$RUNNER_TEMP/baseline-tags")
           previous=()
+          echo "BASELINE_TAG=${baseline:-none}" >> "$GITHUB_ENV"
           if [[ -n "$baseline" ]]; then
             gh release download "$baseline" --repo "$GITHUB_REPOSITORY" \
               --pattern openapi.yaml --dir "$RUNNER_TEMP/mistral-previous"
@@ -44,6 +45,22 @@ jobs:
           python check_openapi.py "${previous[@]}" \
             --current "$RUNNER_TEMP/mistral-current/openapi.yaml" \
             --output "$RUNNER_TEMP/release-notes.md"
+          {
+            echo "## Mistral OpenAPI check"
+            echo "- Fetched https://docs.mistral.ai/openapi.yaml"
+            if [[ -n "$baseline" ]]; then
+              echo "- Compared against previous release: \`$baseline\`"
+            else
+              echo "- No previous release found: this run creates the **baseline**"
+            fi
+            python - "$RUNNER_TEMP/mistral-current/openapi.yaml" <<'PY'
+          import sys, yaml
+          spec = yaml.safe_load(open(sys.argv[1], encoding="utf-8"))
+          methods = {"get","put","post","delete","options","head","patch","trace"}
+          ops = sum(1 for item in spec["paths"].values() for m in item if m.lower() in methods)
+          print(f"- Current spec: {len(spec['paths'])} paths, {ops} operations")
+          PY
+          } >> "$GITHUB_STEP_SUMMARY"
       - name: Publish changes
         env:
           GH_TOKEN: ${{ github.token }}
@@ -51,6 +68,7 @@ jobs:
           set -euo pipefail
           if [[ ! -s "$RUNNER_TEMP/release-notes.md" ]]; then
             echo "No endpoint changes."
+            echo "- **Result:** no endpoint changes since \`$BASELINE_TAG\`; no release created" >> "$GITHUB_STEP_SUMMARY"
             exit 0
           fi
           tag="mistral-openapi-$(date -u +%Y%m%d)-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
@@ -59,3 +77,16 @@ jobs:
             --title "Mistral API update $(date -u +%Y-%m-%d)" \
             --notes-file "$RUNNER_TEMP/release-notes.md"
           gh release edit "$tag" --repo "$GITHUB_REPOSITORY" --draft=false
+          {
+            echo "- **Result:** published release [\`$tag\`]($GITHUB_SERVER_URL/$GITHUB_REPOSITORY/releases/tag/$tag)"
+            for section in Added Changed Removed; do
+              count=$(awk -v s="## $section" '$0==s{f=1;next} /^## /{f=0} f&&/^### /{n++} END{print n+0}' "$RUNNER_TEMP/release-notes.md")
+              echo "  - $section: $count endpoint(s)"
+            done
+            echo
+            echo "<details><summary>Release notes</summary>"
+            echo
+            cat "$RUNNER_TEMP/release-notes.md"
+            echo
+            echo "</details>"
+          } >> "$GITHUB_STEP_SUMMARY"
