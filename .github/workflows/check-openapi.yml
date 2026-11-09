@@ -79,10 +79,14 @@ jobs:
           gh release edit "$tag" --repo "$GITHUB_REPOSITORY" --draft=false
           {
             echo "- **Result:** published release [\`$tag\`]($GITHUB_SERVER_URL/$GITHUB_REPOSITORY/releases/tag/$tag)"
-            for section in Added Changed Removed; do
-              count=$(awk -v s="## $section" '$0==s{f=1;next} /^## /{f=0} f&&/^### /{n++} END{print n+0}' "$RUNNER_TEMP/release-notes.md")
-              echo "  - $section: $count endpoint(s)"
-            done
+            if [[ "$BASELINE_TAG" == "none" ]]; then
+              echo "  - Baseline: the full current spec was saved as \`openapi.yaml\` on this release; there was nothing to compare against, so no added/changed/removed counts"
+            else
+              for section in Added Changed Removed; do
+                count=$(awk -v s="## $section" '$0==s{f=1;next} /^## /{f=0} f&&/^### /{n++} END{print n+0}' "$RUNNER_TEMP/release-notes.md")
+                echo "  - $section: $count endpoint(s)"
+              done
+            fi
             echo
             echo "<details><summary>Release notes</summary>"
             echo
