@@ -46,3 +46,19 @@ python -m unittest discover -s tests -v
 
 Omit `--previous` to generate baseline notes. An empty notes file means no
 endpoint changes were found.
+
+## Workflow dependency lockfile
+
+Every action used in `.github/workflows/` is pinned to a verified commit in
+`.github/workflows/actions.lock`, managed by
+[`gh-actions-lock`](https://github.com/github/gh-actions-lock). The
+`verify-lockfile` workflow runs `gh actions-lock --verify` on pull requests and
+pushes to `main`.
+
+After adding a workflow or changing any `uses:` (including Dependabot action
+bumps), run this and commit the result:
+
+```bash
+gh extension install github/gh-actions-lock
+gh actions-lock
+```
