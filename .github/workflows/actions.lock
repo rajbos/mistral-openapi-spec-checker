@@ -6,18 +6,18 @@ workflows:
     '.github/workflows/check-openapi.yml':
         - 'actions/checkout@v7.0.1'
         - 'actions/setup-python@v7.1.0'
-        - 'step-security/harden-runner@v2.22.4'
+        - 'step-security/harden-runner@v2.23.0'
     '.github/workflows/codeql.yml':
         - 'actions/checkout@v7.0.1'
         - 'github/codeql-action@v4.39.3'
-        - 'step-security/harden-runner@v2.22.4'
+        - 'step-security/harden-runner@v2.23.0'
     '.github/workflows/dependency-review.yml':
         - 'actions/checkout@v7.0.1'
         - 'actions/dependency-review-action@v5.0.0'
-        - 'step-security/harden-runner@v2.22.4'
+        - 'step-security/harden-runner@v2.23.0'
     '.github/workflows/verify-lockfile.yml':
         - 'actions/checkout@v7.0.1'
-        - 'step-security/harden-runner@v2.22.4'
+        - 'step-security/harden-runner@v2.23.0'
 dependencies:
     'actions/checkout@v7.0.1':
         ref: 'v7.0.1'
@@ -39,8 +39,8 @@ dependencies:
         commit: 'sha1-33d7b85da1a04171e211befe2c739303b9a4c066'
         owner_id: 9919
         repo_id: 259445878
-    'step-security/harden-runner@v2.22.4':
-        ref: 'v2.22.4'
-        commit: 'sha1-1d88384fd173af6ecb012dfd0264a306b711241a'
+    'step-security/harden-runner@v2.23.0':
+        ref: 'v2.23.0'
+        commit: 'sha1-aebdcf6156ab6691adf63218240e476564a1ed4c'
         owner_id: 88700172
         repo_id: 422287306
